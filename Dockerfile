@@ -85,6 +85,7 @@ RUN export CODENAME=$(lsb_release -cs) && \
  TEMP_DEB="$(mktemp)" && \
  curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
+ apt-get update && \
  apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
  rm -rf /var/lib/apt/lists/*
