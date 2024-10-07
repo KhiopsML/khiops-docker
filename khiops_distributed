@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Run Khiops tool in distributed mode or with provided MPI settings
+if [ -z ${KHIOPS_MPI_COMMAND_ARGS+x} ]; then
+    KHIOPS_MPI_COMMAND="mpirun --mca btl_vader_single_copy_mechanism none --allow-run-as-root --quiet"
+
+    for line in $(env | grep -E '^(KHIOPS|Khiops|AWS_|S3_|GOOGLE_)'); do
+        echo Processing $line
+        name=${line%%=*}
+        KHIOPS_MPI_COMMAND="${KHIOPS_MPI_COMMAND} -x ${name}"
+    done
+else 
+    KHIOPS_MPI_COMMAND="${KHIOPS_MPIEXEC_PATH} ${KHIOPS_MPI_COMMAND_ARGS}"
+fi
+
+if [[  $# -eq 0  ]]; then
+    # run without parameters: display status
+    echo $KHIOPS_MPI_COMMAND MODL -s
+    $KHIOPS_MPI_COMMAND MODL -s
+else
+    # run with parameters
+    echo $KHIOPS_MPI_COMMAND MODL "$@"
+    $KHIOPS_MPI_COMMAND MODL "$@"
+fi
+
+exit $?

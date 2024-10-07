@@ -74,8 +74,49 @@ ENV GRPC_PORT=10000
 
 EXPOSE 10000 11000
 
+ARG port=2222
+
+USER root
+# hadolint ignore=SC2155,SC2086,DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-server \
+    openssh-client \
+    libcap2-bin \
+    dnsutils && \
+    rm -rf /var/lib/apt/lists/*
+# Add priviledge separation directory to run sshd as root.
+RUN mkdir -p /var/run/sshd && \
+    # Add capability to run sshd as non-root.
+    setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/sshd && \
+    apt-get remove libcap2-bin -y && apt-get autoremove -y
+
+# Allow OpenSSH to talk to containers without asking for confirmation
+# by disabling StrictHostKeyChecking.
+# mpi-operator mounts the .ssh folder from a Secret. For that to work, we need
+# to disable UserKnownHostsFile to avoid write permissions.
+# Disabling StrictModes avoids directory and files read permission checks.
+RUN sed -i "s/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g" /etc/ssh/ssh_config \
+    && echo "    UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config \
+    && sed -i "s/[ #]\(.*Port \).*/ \1$port/g" /etc/ssh/ssh_config \
+    && sed -i "s/#\(StrictModes \).*/\1no/g" /etc/ssh/sshd_config \
+    && sed -i "s/#\(Port \).*/\1$port/g" /etc/ssh/sshd_config && \
+    echo "    SendEnv KHIOPS*" >> /etc/ssh/ssh_config && \
+    echo "    SendEnv Khiops*" >> /etc/ssh/ssh_config
+
+RUN useradd -m mpiuser
+WORKDIR /home/mpiuser
+# Configurations for running sshd as non-root.
+COPY --chown=mpiuser sshd_config .sshd_config
+RUN echo "Port $port" >> /home/mpiuser/.sshd_config && \
+    echo "AcceptEnv KHIOPS*" >> /home/mpiuser/.sshd_config && \
+    echo "AcceptEnv Khiops*" >> /home/mpiuser/.sshd_config
+
+COPY --chmod=555 khiops_distributed khiops_local /usr/bin/
+USER ubuntu
+
+
 # Khiops desktop version
-FROM full AS desktop
+FROM slim AS desktop
 USER root
 
 # install packages
