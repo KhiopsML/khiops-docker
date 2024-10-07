@@ -16,7 +16,9 @@ jobs:
           - image: KhiopsML/khiops-desktop
             dockerfile: Dockerfile
             target: desktop
-            
+          - image: KhiopsML/khiops-python
+            dockerfile: Dockerfile
+            target: pykhiops            
     steps:
       - name: Checkout
         uses: actions/checkout@v3
