@@ -37,8 +37,10 @@ USER root
 # ------------------------------------------
 ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
 ARG KHIOPS_VERSION=10.2.2
-ARG GCS_DRIVER_VERSION=0.0.10
-ARG S3_DRIVER_VERSION=0.0.12
+ARG GCS_DRIVER_VERSION=0.0.1
+ARG GCS_DRIVER_RC_EXT=-rc1
+ARG S3_DRIVER_VERSION=0.0.1
+ARG S3_DRIVER_RC_EXT=-rc1
 
 # install packages
 # ----------------
@@ -50,14 +52,13 @@ RUN export CODENAME=$(lsb_release -cs) && \
  curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/${KHIOPS_CORE_PACKAGE_NAME}_${KHIOPS_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
  dpkg -i "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
- curl -L "https://github.com/sgouache/khiopsdriver-gcs/releases/download/${GCS_DRIVER_VERSION}/khiops-gcs_${GCS_DRIVER_VERSION}.deb" -o "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiopsdriver-gcs/releases/download/${GCS_DRIVER_VERSION}${GCS_DRIVER_RC_EXT}/khiops-driver-gcs_0.1.0-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
- curl -L "https://github.com/sgouache/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}/khiops-s3_${S3_DRIVER_VERSION}.deb" -o "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}${S3_DRIVER_RC_EXT}/khiops-driver-s3_0.1.0-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
  rm -rf /var/lib/apt/lists/*
-
 USER ubuntu
 
 # Khiops slim + server
