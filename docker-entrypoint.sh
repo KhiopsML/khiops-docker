@@ -10,22 +10,6 @@ if [ -z ${K_MPI_JOB_ROLE+x} ]; then
   export KHIOPS_PROC_NUMBER=`/cpu_count.sh`
   echo KHIOPS_PROC_NUMBER=$KHIOPS_PROC_NUMBER
 
-  # With OpenMPI, khiops fails to propagate credentials provided as env variables
-  # Therefore we make "khiops" resolve to a custom script that propagates all variables
-  # that can be relevant for khiops
-  mkdir -p $HOME/sbin
-  ln -s /usr/bin/khiops_local $HOME/sbin/khiops
-  export PATH=$HOME/sbin:$PATH
-
-  # for python scripts that invoke MODL directly we define the needed MPI variables
-  KHIOPS_MPI_COMMAND_ARGS="--mca btl_vader_single_copy_mechanism none --allow-run-as-root --quiet -n ${KHIOPS_PROC_NUMBER}"
-  for line in $(env | grep -E '^(KHIOPS|Khiops|AWS_|S3_|GOOGLE_)'); do
-    name=${line%%=*}
-    KHIOPS_MPI_COMMAND_ARGS="${KHIOPS_MPI_COMMAND_ARGS} -x ${name}"
-  done
-  export KHIOPS_MPIEXEC_PATH=/usr/bin/mpirun
-  export KHIOPS_MPI_COMMAND_ARGS
-
 else
 
   echo Distributed execution
@@ -52,29 +36,30 @@ else
   }
 
   if [ "$K_MPI_JOB_ROLE" == "launcher" ]; then
-
-    # By default khiops tries to determine locally available cores which breaks in distributed mode
-    # Therefore we make "khiops" resolve to a custom script that honors the /etc/hostfile settings
-    # In addition the script will propagate relevant khiops env variables properly to the workers
-    mkdir -p $HOME/sbin
-    ln -s /usr/bin/khiops_distributed $HOME/sbin/khiops
-    export PATH=$HOME/sbin:$PATH
-
-    # for python scripts that invoke MODL directly we define the needed MPI variables
-    KHIOPS_MPI_COMMAND_ARGS="--mca btl_vader_single_copy_mechanism none --allow-run-as-root --quiet"
+    
+    # List khiops related variables that need to be propagated by the launcher to the workers
     for line in $(env | grep -E '^(KHIOPS|Khiops|AWS_|S3_|GOOGLE_)'); do
       name=${line%%=*}
-      KHIOPS_MPI_COMMAND_ARGS="${KHIOPS_MPI_COMMAND_ARGS} -x ${name}"
+      KHIOPS_MPI_EXTRA_FLAGS="${KHIOPS_MPI_EXTRA_FLAGS} -x ${name}"
     done
-    export KHIOPS_MPIEXEC_PATH=/usr/bin/mpirun
-    export KHIOPS_MPI_COMMAND_ARGS
+    if ! [ -z ${KHIOPS_MPI_EXTRA_FLAGS+x} ]; then
+      export KHIOPS_MPI_EXTRA_FLAGS
+    fi
+
+    # Turn on verbose MPI logs to ease debugging configuration issues
+    export KHIOPS_MPI_VERBOSE=true
+
+    mpi_host_file=/etc/mpi/hostfile
+
+    # Temporary: pass KHIOPS_MPI_HOST_FILE even if it is the default file expected by mpiexec
+    export KHIOPS_MPI_HOST_FILE=$mpi_host_file
 
     # Wait for name resolution to complete
     if [[ $HOSTNAME == *"-launcher-"* ]]; then
       resolve_host "$HOSTNAME"
     fi
-    if [ -f /etc/mpi/hostfile ]; then
-      cut -d ' ' -f 1 /etc/mpi/hostfile | while read -r host
+    if [ -f $mpi_host_file ]; then
+      cut -d ' ' -f 1 $mpi_host_file | while read -r host
       do
         resolve_host "$host"
       done

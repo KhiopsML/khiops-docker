@@ -36,11 +36,9 @@ USER root
 # Define package versions
 # ------------------------------------------
 ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
-ARG KHIOPS_VERSION=10.2.2
-ARG GCS_DRIVER_VERSION=0.0.1
-ARG GCS_DRIVER_RC_EXT=-rc1
-ARG S3_DRIVER_VERSION=0.0.1
-ARG S3_DRIVER_RC_EXT=-rc1
+ARG KHIOPS_VERSION=10.2.4
+ARG GCS_DRIVER_VERSION=0.0.11
+ARG S3_DRIVER_VERSION=0.0.13
 
 # install packages
 # ----------------
@@ -52,10 +50,10 @@ RUN export CODENAME=$(lsb_release -cs) && \
  curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/${KHIOPS_CORE_PACKAGE_NAME}_${KHIOPS_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
  dpkg -i "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
- curl -L "https://github.com/KhiopsML/khiopsdriver-gcs/releases/download/${GCS_DRIVER_VERSION}${GCS_DRIVER_RC_EXT}/khiops-driver-gcs_0.1.0-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiopsdriver-gcs/releases/download/${GCS_DRIVER_VERSION}/khiops-driver-gcs_${GCS_DRIVER_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
- curl -L "https://github.com/KhiopsML/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}${S3_DRIVER_RC_EXT}/khiops-driver-s3_0.1.0-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}/khiops-driver-s3_${S3_DRIVER_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
  rm -rf /var/lib/apt/lists/*
@@ -101,7 +99,10 @@ RUN sed -i "s/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g" /etc/ssh/ssh_config \
     && sed -i "s/#\(StrictModes \).*/\1no/g" /etc/ssh/sshd_config \
     && sed -i "s/#\(Port \).*/\1$port/g" /etc/ssh/sshd_config && \
     echo "    SendEnv KHIOPS*" >> /etc/ssh/ssh_config && \
-    echo "    SendEnv Khiops*" >> /etc/ssh/ssh_config
+    echo "    SendEnv Khiops*" >> /etc/ssh/ssh_config && \
+    echo "    SendEnv AWS_*" >> /etc/ssh/ssh_config && \
+    echo "    SendEnv S3_*" >> /etc/ssh/ssh_config && \
+    echo "    SendEnv GOOGLE_*" >> /etc/ssh/ssh_config
 
 RUN useradd -m mpiuser
 WORKDIR /home/mpiuser
@@ -109,9 +110,14 @@ WORKDIR /home/mpiuser
 COPY --chown=mpiuser sshd_config .sshd_config
 RUN echo "Port $port" >> /home/mpiuser/.sshd_config && \
     echo "AcceptEnv KHIOPS*" >> /home/mpiuser/.sshd_config && \
-    echo "AcceptEnv Khiops*" >> /home/mpiuser/.sshd_config
+    echo "AcceptEnv Khiops*" >> /home/mpiuser/.sshd_config && \
+    echo "AcceptEnv AWS_*" >> /home/mpiuser/.sshd_config && \
+    echo "AcceptEnv S3_*" >> /home/mpiuser/.sshd_config && \
+    echo "AcceptEnv GOOGLE_*" >> /home/mpiuser/.sshd_config
 
-COPY --chmod=555 khiops_distributed khiops_local /usr/bin/
+WORKDIR /home/ubuntu
+RUN cp /home/mpiuser/.sshd_config . && \
+    chown ubuntu .sshd_config
 USER ubuntu
 
 
@@ -159,11 +165,12 @@ COPY kni/*.sh kni/KhiopsNativeInterface.i kni/README.md kni/setup.py /root/
 WORKDIR /root
 RUN chmod +x install.sh compile.sh && ./install.sh && ./compile.sh
 USER ubuntu
+
 # pykhiops version
 FROM full AS pykhiops
 USER root
 
-ARG PYKHIOPS_VERSION=10.2.2.4
+ARG PYKHIOPS_VERSION=10.2.4.0
 
 # install packages
 # ----------------
