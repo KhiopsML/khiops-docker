@@ -51,9 +51,6 @@ else
 
     mpi_host_file=/etc/mpi/hostfile
 
-    # Temporary: pass KHIOPS_MPI_HOST_FILE even if it is the default file expected by mpiexec
-    export KHIOPS_MPI_HOST_FILE=$mpi_host_file
-
     # Wait for name resolution to complete
     if [[ $HOSTNAME == *"-launcher-"* ]]; then
       resolve_host "$HOSTNAME"
