@@ -129,7 +129,7 @@ USER root
 # ----------------
 # hadolint ignore=SC2155,SC2086,DL3008,DL4006
 RUN export CODENAME=$(lsb_release -cs) && \
- export KHIOPS_VERSION="$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | cut -d '-' -f 1)" && \
+ export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
  TEMP_DEB="$(mktemp)" && \
  curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
@@ -140,14 +140,14 @@ RUN export CODENAME=$(lsb_release -cs) && \
 USER ubuntu
 
 # Intermediate image building python KNI binding
-FROM desktop AS pykni
+FROM full AS pykni
 USER root
 
 # install packages
 # ----------------
 # hadolint ignore=SC2155,SC2086,DL3008,DL4006
 RUN export CODENAME=$(lsb_release -cs) && \
- export KHIOPS_VERSION="$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | cut -d '-' -f 1)" && \
+ export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
  TEMP_DEB="$(mktemp)" && \
  curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
@@ -176,7 +176,7 @@ ARG PYKHIOPS_VERSION=10.2.4.0
 # ----------------
 # hadolint ignore=SC2155,SC2086,DL3008,DL4006
 RUN export CODENAME=$(lsb_release -cs) && \
- export KHIOPS_VERSION="$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | cut -d '-' -f 1)" && \
+ export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
  sed -i 's|path-exclude=/usr/share/doc/*|#path-exclude=/usr/share/doc/*|' /etc/dpkg/dpkg.cfg.d/excludes && \
  apt-get --allow-unauthenticated update && \
  TEMP_DEB="$(mktemp)" && \
