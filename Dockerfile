@@ -36,7 +36,7 @@ USER root
 # Define package versions
 # ------------------------------------------
 ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
-ARG KHIOPS_VERSION=10.3.0-rc.0
+ARG KHIOPS_VERSION=10.3.0
 ARG GCS_DRIVER_VERSION=0.0.11
 ARG S3_DRIVER_VERSION=0.0.13
 
@@ -171,7 +171,7 @@ USER ubuntu
 FROM full AS pykhiops
 USER root
 
-ARG PYKHIOPS_VERSION=10.2.4.0
+ARG PYKHIOPS_VERSION=10.3.0.0
 
 # install packages
 # ----------------
