@@ -36,7 +36,7 @@ USER root
 # Define package versions
 # ------------------------------------------
 ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
-ARG KHIOPS_VERSION=10.3.0-rc.0
+ARG KHIOPS_VERSION=10.3.0
 ARG GCS_DRIVER_VERSION=0.0.11
 ARG S3_DRIVER_VERSION=0.0.13
 
@@ -104,21 +104,22 @@ RUN sed -i "s/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g" /etc/ssh/ssh_config \
     echo "    SendEnv S3_*" >> /etc/ssh/ssh_config && \
     echo "    SendEnv GOOGLE_*" >> /etc/ssh/ssh_config
 
-RUN useradd -m mpiuser
+RUN useradd -m -g root mpiuser
 WORKDIR /home/mpiuser
 # Configurations for running sshd as non-root.
 COPY --chown=mpiuser sshd_config .sshd_config
-RUN echo "Port $port" >> /home/mpiuser/.sshd_config && \
-    echo "AcceptEnv KHIOPS*" >> /home/mpiuser/.sshd_config && \
-    echo "AcceptEnv Khiops*" >> /home/mpiuser/.sshd_config && \
-    echo "AcceptEnv AWS_*" >> /home/mpiuser/.sshd_config && \
-    echo "AcceptEnv S3_*" >> /home/mpiuser/.sshd_config && \
-    echo "AcceptEnv GOOGLE_*" >> /home/mpiuser/.sshd_config
+RUN echo "Port $port" >> .sshd_config && \
+    echo "AcceptEnv KHIOPS*" >> .sshd_config && \
+    echo "AcceptEnv Khiops*" >> .sshd_config && \
+    echo "AcceptEnv AWS_*" >> .sshd_config && \
+    echo "AcceptEnv S3_*" >> .sshd_config && \
+    echo "AcceptEnv GOOGLE_*" >> .sshd_config
 
 WORKDIR /home/ubuntu
 RUN cp /home/mpiuser/.sshd_config . && \
     chown ubuntu .sshd_config
 USER ubuntu
+RUN sed -i s/mpiuser/ubuntu/ .sshd_config
 
 
 # Khiops desktop version
@@ -170,7 +171,7 @@ USER ubuntu
 FROM full AS pykhiops
 USER root
 
-ARG PYKHIOPS_VERSION=10.2.4.0
+ARG PYKHIOPS_VERSION=10.3.0.0
 
 # install packages
 # ----------------
