@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'v11beta'
     tags:
       - '*'
 
@@ -39,7 +40,9 @@ jobs:
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
+            # Full version e.g. 10.3.2.0
             type=match,pattern=^\d+.\d+.\d+.\d+
+            # Short version e.g. 10
             type=match,pattern=^(\d+).\d+.\d+.\d+,group=1
             type=sha
             # set latest tag for default branch
