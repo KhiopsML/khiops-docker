@@ -1,6 +1,6 @@
 # khiops-docker
 
-Khiops v10.3.0 is available as a docker container, with packaged dependencies.
+Khiops is available as a docker container, with packaged dependencies.
 
 ## Base images
 
@@ -129,7 +129,7 @@ The job can be launched on the cluster by requesting the specified yaml file:
 ```kubectl apply -f khiops_job.yaml```
 The MPI Operator takes care of launching the pods and interconnecting them. Once ready, the launcher starts the execution. In this example it executes the "khiops -s" command which displays the allocated resources as seen by the khiops program. The output is similar to:
 ```
-Khiops 10.3.0
+Khiops 10.3.2
 
 Drivers:
  Remote driver (1.0.0) for URI scheme 'file'
