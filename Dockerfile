@@ -155,7 +155,7 @@ RUN export CODENAME=$(lsb_release -cs) && \
  rm -f $TEMP_DEB && \
  apt-get --allow-unauthenticated update && \
  apt-get --allow-unauthenticated install --no-install-recommends -y \
- swig3.0 \
+ swig4.0 \
  python3-pip \
  python3-all \
  python3-all-dev \
@@ -195,8 +195,8 @@ RUN pip install --no-cache-dir "https://github.com/KhiopsML/khiops-python/releas
 
 # Install python KNI binding
 # Make python3 the default python
-COPY --from=pykni /root/dist/KNI*.whl /tmp/
-RUN pip install --no-cache-dir /tmp/KNI*.whl && \
+COPY --from=pykni /root/dist/kni*.whl /tmp/
+RUN pip install --no-cache-dir /tmp/kni*.whl && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 COPY fix-permissions.sh /usr/local/bin/

@@ -1,12 +1,9 @@
 /* File: KhiopsNativeInterface.i */
 %module KNI
 %include "cstring.i"
-
 %{
-#define SWIG_FILE_WITH_INIT
 #include "KhiopsNativeInterface.h"
 %}
-
 %feature("autodoc", "1");
 
 #define KNI_OK                            0
