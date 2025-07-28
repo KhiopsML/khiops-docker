@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - 'main'
-      - 'v11beta'
+      - '11beta'
     tags:
       - '*'
 

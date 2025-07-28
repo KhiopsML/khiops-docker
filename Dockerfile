@@ -171,7 +171,7 @@ USER ubuntu
 FROM full AS pykhiops
 USER root
 
-ARG PYKHIOPS_VERSION=10.3.2.0
+ARG PYKHIOPS_VERSION=11.0.0.0-b.0
 
 # install packages
 # ----------------
