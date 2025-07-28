@@ -36,7 +36,7 @@ USER root
 # Define package versions
 # ------------------------------------------
 ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
-ARG KHIOPS_VERSION=10.3.2
+ARG KHIOPS_VERSION=11.0.0-b.0
 ARG GCS_DRIVER_VERSION=0.0.13
 ARG S3_DRIVER_VERSION=0.0.13
 
