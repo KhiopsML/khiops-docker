@@ -39,10 +39,8 @@ jobs:
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=match,pattern=\d.\d.\d.\d
+            type=match,pattern=^\d+.\d+.\d+.\d+
+            type=match,pattern=^(\d+).\d+.\d+.\d+,group=1
             type=sha
             # set latest tag for default branch
             type=raw,value=latest,enable={{is_default_branch}}
