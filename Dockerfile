@@ -171,6 +171,7 @@ USER ubuntu
 FROM full AS pykhiops
 USER root
 
+# FIXME: see below hardcoded URL!
 ARG PYKHIOPS_VERSION=11.0.0.0-b.0
 
 # install packages
@@ -191,7 +192,8 @@ RUN export CODENAME=$(lsb_release -cs) && \
  rm -rf /var/lib/apt/lists/*
 
 # hadolint ignore=SC2102
-RUN pip install --no-cache-dir "https://github.com/KhiopsML/khiops-python/releases/download/${PYKHIOPS_VERSION}/khiops-${PYKHIOPS_VERSION}.tar.gz"
+#RUN pip install --no-cache-dir "https://github.com/KhiopsML/khiops-python/releases/download/${PYKHIOPS_VERSION}/khiops-${PYKHIOPS_VERSION}.tar.gz"
+RUN pip install --no-cache-dir https://github.com/KhiopsML/khiops-python/releases/download/11.0.0.0-b.0/khiops-11.0.0.0b0.tar.gz
 
 # Install python KNI binding
 # Make python3 the default python
