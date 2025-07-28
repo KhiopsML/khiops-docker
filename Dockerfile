@@ -1,9 +1,11 @@
 
 ARG SERVER_REVISION=0.1.6
 ARG SERVER_IMAGE=ghcr.io/khiopsml/khiops-server:${SERVER_REVISION}
-ARG BASE_TAG=22.04
+ARG BASE_TAG=24.04
 
 FROM ubuntu:$BASE_TAG AS base
+SHELL ["/bin/bash", "-c"]
+
 ENV DEBIAN_FRONTEND=noninteractive
 # hadolint ignore=DL3008
 RUN apt-get update && \
@@ -21,7 +23,7 @@ COPY docker-entrypoint.sh cpu_count.sh /
 RUN mkdir -p /scripts
 COPY run_service.sh /scripts
 RUN chmod +x /docker-entrypoint.sh cpu_count.sh /scripts/run_service.sh && \
- useradd -rm -d /home/ubuntu -s /bin/bash -g root -u 1000 ubuntu
+ usermod -a -G root ubuntu
 
 USER ubuntu
 ENTRYPOINT ["/usr/bin/tini", "--", "/docker-entrypoint.sh"]
@@ -36,25 +38,27 @@ USER root
 # Define package versions
 # ------------------------------------------
 ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
-ARG KHIOPS_VERSION=10.3.2
-ARG GCS_DRIVER_VERSION=0.0.14
-ARG S3_DRIVER_VERSION=0.0.13
+ARG KHIOPS_VERSION=11.0.0-rc.2
+ARG GCS_DRIVER_VERSION=0.0.15
+ARG S3_DRIVER_VERSION=0.0.15
 
 # install packages
 # ----------------
 # hadolint ignore=SC2155,SC2086,DL3008
-RUN export CODENAME=$(lsb_release -cs) && \
+RUN source /etc/os-release && \
+ CODENAME=$VERSION_CODENAME && \
+ BUILDARCH=$(dpkg --print-architecture) && \
  apt-get update && \
  apt-get -y install --no-install-recommends ca-certificates curl && \
  TEMP_DEB="$(mktemp)" && \
- curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/${KHIOPS_CORE_PACKAGE_NAME}_${KHIOPS_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/${KHIOPS_CORE_PACKAGE_NAME}_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
  dpkg -i "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
- curl -L "https://github.com/KhiopsML/khiopsdriver-gcs/releases/download/${GCS_DRIVER_VERSION}/khiops-driver-gcs_${GCS_DRIVER_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
- dpkg -i --force-all "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiopsdriver-gcs/releases/download/${GCS_DRIVER_VERSION}/khiops-driver-gcs_${GCS_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ dpkg -i --force-all "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
- curl -L "https://github.com/KhiopsML/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}/khiops-driver-s3_${S3_DRIVER_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
- dpkg -i --force-all "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}/khiops-driver-s3_${S3_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ dpkg -i --force-all "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
  rm -rf /var/lib/apt/lists/*
 USER ubuntu
@@ -129,10 +133,12 @@ USER root
 # install packages
 # ----------------
 # hadolint ignore=SC2155,SC2086,DL3008,DL4006
-RUN export CODENAME=$(lsb_release -cs) && \
+RUN source /etc/os-release && \
+ CODENAME=$VERSION_CODENAME && \
+ BUILDARCH=$(dpkg --print-architecture) && \
  export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
  TEMP_DEB="$(mktemp)" && \
- curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  apt-get update && \
  apt-get -f -y install --no-install-recommends && \
@@ -147,15 +153,17 @@ USER root
 # install packages
 # ----------------
 # hadolint ignore=SC2155,SC2086,DL3008,DL4006
-RUN export CODENAME=$(lsb_release -cs) && \
+RUN source /etc/os-release && \
+ CODENAME=$VERSION_CODENAME && \
+ BUILDARCH=$(dpkg --print-architecture) && \
  export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
  TEMP_DEB="$(mktemp)" && \
- curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
  apt-get --allow-unauthenticated update && \
  apt-get --allow-unauthenticated install --no-install-recommends -y \
- swig4.0 \
+ swig \
  python3-pip \
  python3-all \
  python3-all-dev \
@@ -171,17 +179,19 @@ USER ubuntu
 FROM full AS pykhiops
 USER root
 
-ARG PYKHIOPS_VERSION=10.3.2.1
+ARG KHIOPS_PYTHON_VERSION=11.0.0.0rc2
+ARG KHIOPS_PYTHON_VERSION_FOLDER=11.0.0.0-rc.2
 
 # install packages
 # ----------------
 # hadolint ignore=SC2155,SC2086,DL3008,DL4006
-RUN export CODENAME=$(lsb_release -cs) && \
+RUN source /etc/os-release && \
+ CODENAME=$VERSION_CODENAME && \
+ BUILDARCH=$(dpkg --print-architecture) && \
  export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
- sed -i 's|path-exclude=/usr/share/doc/*|#path-exclude=/usr/share/doc/*|' /etc/dpkg/dpkg.cfg.d/excludes && \
  apt-get --allow-unauthenticated update && \
  TEMP_DEB="$(mktemp)" && \
- curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.amd64.deb" -o "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
  apt-get --allow-unauthenticated install --no-install-recommends -y \
@@ -191,12 +201,13 @@ RUN export CODENAME=$(lsb_release -cs) && \
  rm -rf /var/lib/apt/lists/*
 
 # hadolint ignore=SC2102
-RUN pip install --no-cache-dir "https://github.com/KhiopsML/khiops-python/releases/download/${PYKHIOPS_VERSION}/khiops-${PYKHIOPS_VERSION}.tar.gz"
+#RUN pip install --no-cache-dir "https://github.com/KhiopsML/khiops-python/releases/download/${KHIOPS_PYTHON_VERSION}/khiops-${KHIOPS_PYTHON_VERSION}.tar.gz"
+RUN pip install --break-system-packages "https://github.com/KhiopsML/khiops-python/releases/download/${KHIOPS_PYTHON_VERSION_FOLDER}/khiops-${KHIOPS_PYTHON_VERSION}.tar.gz"
 
 # Install python KNI binding
 # Make python3 the default python
 COPY --from=pykni /root/dist/kni*.whl /tmp/
-RUN pip install --no-cache-dir /tmp/kni*.whl && \
+RUN pip install --no-cache-dir --break-system-packages /tmp/kni*.whl && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 COPY fix-permissions.sh /usr/local/bin/
