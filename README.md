@@ -134,7 +134,7 @@ Khiops 10.3.2
 Drivers:
  Remote driver (1.0.0) for URI scheme 'file'
  S3 driver (0.0.13) for URI scheme 's3'
- GCS driver (0.0.11) for URI scheme 'gs'
+ GCS driver (0.0.14) for URI scheme 'gs'
 Environment variables:
  KHIOPS_MEMORY_LIMIT 4096
 Internal environment variables:
