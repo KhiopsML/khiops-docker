@@ -144,6 +144,9 @@ RUN source /etc/os-release && \
  apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
  rm -rf /var/lib/apt/lists/*
+
+# Fix for MacOS broken display 
+ENV JAVA_TOOL_OPTIONS='-Dsun.java2d.xrender=false'
 USER ubuntu
 
 # Intermediate image building python KNI binding
