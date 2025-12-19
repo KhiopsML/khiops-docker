@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'v11beta'
     tags:
       - '*'
 
@@ -22,13 +23,26 @@ jobs:
             dockerfile: Dockerfile
             target: pykhiops            
     steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          swap-storage: false
+          large-packages: false
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          docker-images: true
+
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -39,14 +53,24 @@ jobs:
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
+            # Full version e.g. 10.3.2.0
             type=match,pattern=^\d+.\d+.\d+.\d+
+            # Short version e.g. 10
             type=match,pattern=^(\d+).\d+.\d+.\d+,group=1
             type=sha
             # set latest tag for default branch
             type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+    
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+    
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
+          platforms: linux/amd64,linux/arm64
           context: .
           file: ${{ matrix.dockerfile }}
           target: ${{ matrix.target }}
