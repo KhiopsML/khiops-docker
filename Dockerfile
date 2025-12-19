@@ -38,7 +38,7 @@ USER root
 # Define package versions
 # ------------------------------------------
 ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
-ARG KHIOPS_VERSION=11.0.0-rc.2
+ARG KHIOPS_VERSION=11.0.0
 ARG GCS_DRIVER_VERSION=0.0.15
 ARG S3_DRIVER_VERSION=0.0.15
 
@@ -182,8 +182,7 @@ USER ubuntu
 FROM full AS pykhiops
 USER root
 
-ARG KHIOPS_PYTHON_VERSION=11.0.0.0rc2
-ARG KHIOPS_PYTHON_VERSION_FOLDER=11.0.0.0-rc.2
+ARG KHIOPS_PYTHON_VERSION=11.0.0.0
 
 # install packages
 # ----------------
@@ -204,8 +203,7 @@ RUN source /etc/os-release && \
  rm -rf /var/lib/apt/lists/*
 
 # hadolint ignore=SC2102
-#RUN pip install --no-cache-dir "https://github.com/KhiopsML/khiops-python/releases/download/${KHIOPS_PYTHON_VERSION}/khiops-${KHIOPS_PYTHON_VERSION}.tar.gz"
-RUN pip install --break-system-packages "https://github.com/KhiopsML/khiops-python/releases/download/${KHIOPS_PYTHON_VERSION_FOLDER}/khiops-${KHIOPS_PYTHON_VERSION}.tar.gz"
+RUN pip install --break-system-packages "https://github.com/KhiopsML/khiops-python/releases/download/${KHIOPS_PYTHON_VERSION}/khiops-${KHIOPS_PYTHON_VERSION}.tar.gz"
 
 # Install python KNI binding
 # Make python3 the default python
