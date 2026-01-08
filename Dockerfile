@@ -142,7 +142,7 @@ RUN source /etc/os-release && \
  dpkg -i --force-all "$TEMP_DEB" && \
  apt-get update && \
  apt-get -f -y install --no-install-recommends locales && \
- locale-gen en_US.UTF-8&& \
+ locale-gen en_US.UTF-8 && \
  rm -f $TEMP_DEB && \
  rm -rf /var/lib/apt/lists/*
 
