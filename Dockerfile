@@ -141,9 +141,13 @@ RUN source /etc/os-release && \
  curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  apt-get update && \
- apt-get -f -y install --no-install-recommends && \
+ apt-get -f -y install --no-install-recommends locales && \
+ locale-gen en_US.UTF-8&& \
  rm -f $TEMP_DEB && \
  rm -rf /var/lib/apt/lists/*
+
+# Fix for desktop application crash when paths contain UTF8 characters
+ENV LANG=en_US.UTF-8
 
 # Fix for MacOS broken display 
 ENV JAVA_TOOL_OPTIONS='-Dsun.java2d.xrender=false'
