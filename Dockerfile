@@ -130,6 +130,11 @@ RUN sed -i s/mpiuser/ubuntu/ .sshd_config
 FROM slim AS desktop
 USER root
 
+# Define package versions
+# ------------------------------------------
+ARG KHIOPS_VISUALIZATION_VERSION=11.3.1
+ARG KHIOPS_COVISUALIZATION_VERSION=11.5.2
+   
 # install packages
 # ----------------
 # hadolint ignore=SC2155,SC2086,DL3008,DL4006
@@ -140,18 +145,36 @@ RUN source /etc/os-release && \
  TEMP_DEB="$(mktemp)" && \
  curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
- apt-get update && \
- apt-get -f -y install --no-install-recommends locales && \
- locale-gen en_US.UTF-8 && \
+ curl -L "https://github.com/KhiopsML/kv-electron/releases/download/v${KHIOPS_VISUALIZATION_VERSION}/khiops-visualization_${KHIOPS_VISUALIZATION_VERSION}_${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ dpkg -i --force-all "$TEMP_DEB" && \
+ curl -L "https://github.com/KhiopsML/kc-electron/releases/download/v${KHIOPS_COVISUALIZATION_VERSION}/khiops-covisualization_${KHIOPS_COVISUALIZATION_VERSION}_${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
+ apt-get update && \
+ apt -y --fix-broken install && \
+ apt -f -y install --no-install-recommends locales unzip fonts-noto fonts-noto-cjk fonts-noto-color-emoji && \
+ locale-gen en_US.UTF-8 && \
  rm -rf /var/lib/apt/lists/*
+
+COPY xdg-open /usr/bin/xdg-open
+RUN chmod 755 /usr/bin/xdg-open
+
+USER ubuntu
+WORKDIR /home/ubuntu
+RUN TEMP_ZIP="$(mktemp --suffix=.zip)" && \
+  curl -L "https://github.com/KhiopsML/khiops-samples/releases/download/11.0.0/khiops-samples-11.0.0.zip" -o "$TEMP_ZIP" && \
+  unzip "$TEMP_ZIP" && \
+  rm -f $TEMP_ZIP && \
+  mkdir .config
+
+#RUN ln -s /usr/bin/khiops /opt/ && \
+# ln -s /usr/bin/khiops_env /opt/
 
 # Fix for desktop application crash when paths contain UTF8 characters
 ENV LANG=en_US.UTF-8
 
 # Fix for MacOS broken display 
 ENV JAVA_TOOL_OPTIONS='-Dsun.java2d.xrender=false'
-USER ubuntu
 
 # Intermediate image building python KNI binding
 FROM full AS pykni
