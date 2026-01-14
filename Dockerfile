@@ -186,7 +186,7 @@ USER ubuntu
 FROM full AS pykhiops
 USER root
 
-ARG KHIOPS_PYTHON_VERSION=11.0.0.0
+ARG KHIOPS_PYTHON_VERSION=11.0.0.1
 
 # install packages
 # ----------------
