@@ -1,0 +1,24 @@
+#!/bin/bash
+
+open() {
+   local cmd=$1
+   local filename=$2
+   if ! command -v $cmd >/dev/null 2>&1
+   then
+      echo "${cmd} could not be found"
+      exit 3
+   else
+      $cmd $filename & 2>&1 > /dev/null
+   fi
+}
+
+filename=$1
+
+case "$filename" in
+*.khj) 
+   open /usr/bin/khiops-visualization $filename
+   ;;
+*.khcj)
+   open /usr/bin/khiops-covisualization $filename
+   ;;
+esac
