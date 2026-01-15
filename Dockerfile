@@ -49,15 +49,15 @@ RUN source /etc/os-release && \
  CODENAME=$VERSION_CODENAME && \
  BUILDARCH=$(dpkg --print-architecture) && \
  apt-get update && \
- apt-get -y install --no-install-recommends ca-certificates curl && \
+ apt-get -y install --no-install-recommends ca-certificates wget && \
  TEMP_DEB="$(mktemp)" && \
- curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/${KHIOPS_CORE_PACKAGE_NAME}_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/${KHIOPS_CORE_PACKAGE_NAME}_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
- curl -L "https://github.com/KhiopsML/khiopsdriver-gcs/releases/download/${GCS_DRIVER_VERSION}/khiops-driver-gcs_${GCS_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ wget "https://github.com/KhiopsML/khiopsdriver-gcs/releases/download/${GCS_DRIVER_VERSION}/khiops-driver-gcs_${GCS_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
- curl -L "https://github.com/KhiopsML/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}/khiops-driver-s3_${S3_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ wget "https://github.com/KhiopsML/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}/khiops-driver-s3_${S3_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
  rm -rf /var/lib/apt/lists/*
@@ -143,11 +143,11 @@ RUN source /etc/os-release && \
  BUILDARCH=$(dpkg --print-architecture) && \
  export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
  TEMP_DEB="$(mktemp)" && \
- curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
- curl -L "https://github.com/KhiopsML/kv-electron/releases/download/v${KHIOPS_VISUALIZATION_VERSION}/khiops-visualization_${KHIOPS_VISUALIZATION_VERSION}_${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ wget "https://github.com/KhiopsML/kv-electron/releases/download/v${KHIOPS_VISUALIZATION_VERSION}/khiops-visualization_${KHIOPS_VISUALIZATION_VERSION}_${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
- curl -L "https://github.com/KhiopsML/kc-electron/releases/download/v${KHIOPS_COVISUALIZATION_VERSION}/khiops-covisualization_${KHIOPS_COVISUALIZATION_VERSION}_${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ wget "https://github.com/KhiopsML/kc-electron/releases/download/v${KHIOPS_COVISUALIZATION_VERSION}/khiops-covisualization_${KHIOPS_COVISUALIZATION_VERSION}_${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
  apt-get update && \
@@ -162,7 +162,7 @@ RUN chmod 755 /usr/bin/xdg-open
 USER ubuntu
 WORKDIR /home/ubuntu
 RUN TEMP_ZIP="$(mktemp --suffix=.zip)" && \
-  curl -L "https://github.com/KhiopsML/khiops-samples/releases/download/11.0.0/khiops-samples-11.0.0.zip" -o "$TEMP_ZIP" && \
+  wget "https://github.com/KhiopsML/khiops-samples/releases/download/11.0.0/khiops-samples-11.0.0.zip" -O "$TEMP_ZIP" && \
   unzip "$TEMP_ZIP" && \
   rm -f $TEMP_ZIP && \
   mkdir .config
@@ -188,7 +188,7 @@ RUN source /etc/os-release && \
  BUILDARCH=$(dpkg --print-architecture) && \
  export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
  TEMP_DEB="$(mktemp)" && \
- curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
  apt-get --allow-unauthenticated update && \
@@ -220,7 +220,7 @@ RUN source /etc/os-release && \
  export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
  apt-get --allow-unauthenticated update && \
  TEMP_DEB="$(mktemp)" && \
- curl -L "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -o "$TEMP_DEB" && \
+ wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
  apt-get --allow-unauthenticated install --no-install-recommends -y \
