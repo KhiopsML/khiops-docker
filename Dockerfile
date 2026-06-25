@@ -38,9 +38,10 @@ USER root
 # Define package versions
 # ------------------------------------------
 ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
-ARG KHIOPS_VERSION=11.0.0
-ARG GCS_DRIVER_VERSION=0.0.15
-ARG S3_DRIVER_VERSION=0.0.15
+ARG KHIOPS_VERSION=11.0.1-rc.2
+ARG GCS_DRIVER_VERSION=0.0.23
+ARG S3_DRIVER_VERSION=0.0.25
+ARG AZURE_DRIVER_VERSION=0.0.18
 
 # install packages
 # ----------------
@@ -58,6 +59,9 @@ RUN source /etc/os-release && \
  dpkg -i --force-all "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
  wget "https://github.com/KhiopsML/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}/khiops-driver-s3_${S3_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
+ dpkg -i --force-all "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
+ rm -f $TEMP_DEB && \
+ wget "https://github.com/KhiopsML/khiopsdriver-azure/releases/download/${AZURE_DRIVER_VERSION}/khiops-driver-azure_${AZURE_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
  rm -f $TEMP_DEB && \
  rm -rf /var/lib/apt/lists/*
@@ -132,8 +136,7 @@ USER root
 
 # Define package versions
 # ------------------------------------------
-ARG KHIOPS_VISUALIZATION_VERSION=11.4.1
-ARG KHIOPS_COVISUALIZATION_VERSION=11.5.4
+ARG KHIOPS_VISUALIZATION_VERSION=11.8.0
 ARG KHIOPS_SAMPLES_VERSION=11.0.0
 
 # install packages
@@ -147,10 +150,7 @@ RUN source /etc/os-release && \
  wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  tag="v${KHIOPS_VISUALIZATION_VERSION//-/}" && \
-  wget "https://github.com/KhiopsML/kv-electron/releases/download/${tag}/khiops-visualization_${KHIOPS_VISUALIZATION_VERSION}_${BUILDARCH}.deb" -O "$TEMP_DEB" && \
- dpkg -i --force-all "$TEMP_DEB" && \
- tag="v${KHIOPS_COVISUALIZATION_VERSION//-/}" && \
- wget "https://github.com/KhiopsML/kc-electron/releases/download/${tag}/khiops-covisualization_${KHIOPS_COVISUALIZATION_VERSION}_${BUILDARCH}.deb" -O "$TEMP_DEB" && \
+ wget "https://github.com/KhiopsML/khiops-visualization-desktop/releases/download/${tag}/Khiops-Visualization-Desktop-${KHIOPS_VISUALIZATION_VERSION}_${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i --force-all "$TEMP_DEB" && \
  rm -f $TEMP_DEB && \
  apt-get update && \
@@ -210,7 +210,7 @@ USER ubuntu
 FROM full AS pykhiops
 USER root
 
-ARG KHIOPS_PYTHON_VERSION=11.0.0.3
+ARG KHIOPS_PYTHON_VERSION=11.0.1.0-rc.2
 
 # install packages
 # ----------------
