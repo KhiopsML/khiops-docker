@@ -1,8 +1,16 @@
-
+# Args available to every stages
+# they need to be declared again (but not redefined) if used in any stage (after the FROM clause)
+# ------------------------------------------
+# Images tags
 ARG SERVER_REVISION=0.1.6
 ARG SERVER_IMAGE=ghcr.io/khiopsml/khiops-server:${SERVER_REVISION}
 ARG BASE_TAG=24.04
+# Khiops variables
+ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
+ARG KHIOPS_VERSION=11.0.1
 
+# Base image
+# ------------------------------------------
 FROM ubuntu:$BASE_TAG AS base
 SHELL ["/bin/bash", "-c"]
 
@@ -17,8 +25,6 @@ RUN apt-get update && \
  rm -rf /var/lib/apt/lists/*
 
 # install scripts
-# ----------------
-
 COPY docker-entrypoint.sh cpu_count.sh /
 RUN mkdir -p /scripts
 COPY run_service.sh /scripts
@@ -32,25 +38,25 @@ CMD []
 VOLUME ["/khiops", "/scripts"]
 HEALTHCHECK NONE
 
+# Slim image (will use native system packages for Khiops)
+# ------------------------------------------
 FROM base AS slim
 USER root
 
-# Define package versions
-# ------------------------------------------
-ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
-ARG KHIOPS_VERSION=11.0.1-rc.2
+# Khiops variables
+ARG KHIOPS_CORE_PACKAGE_NAME
+ARG KHIOPS_VERSION
+# Drivers versions
 ARG GCS_DRIVER_VERSION=0.0.23
 ARG S3_DRIVER_VERSION=0.0.25
 ARG AZURE_DRIVER_VERSION=0.0.18
 
-# install packages
-# ----------------
 # hadolint ignore=SC2155,SC2086,DL3008
 RUN source /etc/os-release && \
  CODENAME=$VERSION_CODENAME && \
  BUILDARCH=$(dpkg --print-architecture) && \
  apt-get update && \
- apt-get -y install --no-install-recommends ca-certificates wget && \
+ apt-get -y install --no-install-recommends ca-certificates wget openmpi-bin libopenmpi3t64 && \
  TEMP_DEB="$(mktemp)" && \
  wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/${KHIOPS_CORE_PACKAGE_NAME}_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
  dpkg -i "$TEMP_DEB" || apt-get -f -y install --no-install-recommends && \
@@ -67,7 +73,8 @@ RUN source /etc/os-release && \
  rm -rf /var/lib/apt/lists/*
 USER ubuntu
 
-# Khiops slim + server
+# Khiops slim + server (will mechanically use native system packages for Khiops)
+# ------------------------------------------
 # hadolint ignore=DL3006
 FROM $SERVER_IMAGE AS server
 FROM slim AS full
@@ -110,18 +117,20 @@ RUN sed -i "s/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g" /etc/ssh/ssh_config \
     echo "    SendEnv Khiops*" >> /etc/ssh/ssh_config && \
     echo "    SendEnv AWS_*" >> /etc/ssh/ssh_config && \
     echo "    SendEnv S3_*" >> /etc/ssh/ssh_config && \
-    echo "    SendEnv GOOGLE_*" >> /etc/ssh/ssh_config
+    echo "    SendEnv GOOGLE_*" >> /etc/ssh/ssh_config && \
+    echo "    SendEnv AZURE_*" >> /etc/ssh/ssh_config
 
-RUN useradd -m -g root mpiuser
+RUN useradd -m  -g root mpiuser
 WORKDIR /home/mpiuser
 # Configurations for running sshd as non-root.
-COPY --chown=mpiuser sshd_config .sshd_config
+COPY --chown=mpiuser:0 sshd_config .sshd_config
 RUN echo "Port $port" >> .sshd_config && \
     echo "AcceptEnv KHIOPS*" >> .sshd_config && \
     echo "AcceptEnv Khiops*" >> .sshd_config && \
     echo "AcceptEnv AWS_*" >> .sshd_config && \
     echo "AcceptEnv S3_*" >> .sshd_config && \
-    echo "AcceptEnv GOOGLE_*" >> .sshd_config
+    echo "AcceptEnv GOOGLE_*" >> .sshd_config && \
+    echo "AcceptEnv AZURE_*" >> /etc/ssh/ssh_config
 
 WORKDIR /home/ubuntu
 RUN cp /home/mpiuser/.sshd_config . && \
@@ -130,17 +139,18 @@ USER ubuntu
 RUN sed -i s/mpiuser/ubuntu/ .sshd_config
 
 
-# Khiops desktop version
+# Khiops desktop image
+# ------------------------------------------
 FROM slim AS desktop
 USER root
 
-# Define package versions
-# ------------------------------------------
+# Packages versions
+ARG KHIOPS_CORE_PACKAGE_NAME
+ARG KHIOPS_VERSION
 ARG KHIOPS_VISUALIZATION_VERSION=11.8.0
 ARG KHIOPS_SAMPLES_VERSION=11.0.0
 
-# install packages
-# ----------------
+# The native system package for Khiops is used
 # hadolint ignore=SC2155,SC2086,DL3008,DL4006
 RUN source /etc/os-release && \
  CODENAME=$VERSION_CODENAME && \
@@ -177,66 +187,35 @@ ENV LANG=en_US.UTF-8
 # Fix for MacOS broken display 
 ENV JAVA_TOOL_OPTIONS='-Dsun.java2d.xrender=false'
 
-# Intermediate image building python KNI binding
-FROM full AS pykni
-USER root
 
-# install packages
-# ----------------
-# hadolint ignore=SC2155,SC2086,DL3008,DL4006
-RUN source /etc/os-release && \
- CODENAME=$VERSION_CODENAME && \
- BUILDARCH=$(dpkg --print-architecture) && \
- export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
- TEMP_DEB="$(mktemp)" && \
- wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
- dpkg -i --force-all "$TEMP_DEB" && \
- rm -f $TEMP_DEB && \
- apt-get --allow-unauthenticated update && \
- apt-get --allow-unauthenticated install --no-install-recommends -y \
- swig \
- python3-pip \
- python3-all \
- python3-all-dev \
- build-essential && \
- rm -rf /var/lib/apt/lists/*
-
-COPY kni/*.sh kni/KhiopsNativeInterface.i kni/README.md kni/setup.py /root/
-WORKDIR /root
-RUN chmod +x install.sh compile.sh && ./install.sh && ./compile.sh
-USER ubuntu
-
-# pykhiops version
+# khiops-python image (will use system-wide packages of Khiops installed via Pip)
+# ------------------------------------------
 FROM full AS pykhiops
 USER root
 
-ARG KHIOPS_PYTHON_VERSION=11.0.1.0-rc.2
+# Version of the Khiops Python library Pip package on the PyPI or Test PyPI repositories
+# this version can be either official, following this pattern : [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+
+# or pre-release (alpha, beta, release candidate), following this other pattern : [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(rc|a|b)[0-9]+
+ARG KHIOPS_PYTHON_VERSION=11.0.1.0
 
-# install packages
-# ----------------
-# hadolint ignore=SC2155,SC2086,DL3008,DL4006
-RUN source /etc/os-release && \
- CODENAME=$VERSION_CODENAME && \
- BUILDARCH=$(dpkg --print-architecture) && \
- export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
- apt-get --allow-unauthenticated update && \
- TEMP_DEB="$(mktemp)" && \
- wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/kni_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
- dpkg -i --force-all "$TEMP_DEB" && \
- rm -f $TEMP_DEB && \
+# hadolint ignore=DL3008,DL4006
+RUN apt-get --allow-unauthenticated update && \
  apt-get --allow-unauthenticated install --no-install-recommends -y \
  python3-pip \
  python3-all \
  python-is-python3 && \
  rm -rf /var/lib/apt/lists/*
 
+# Remove the native system packages of Khiops core and remote files drivers to avoid any conflict
+RUN apt-get remove -y "khiops-*"
+
+# Install the whole Khiops stack (GUI-less) via Pip
 # hadolint ignore=SC2102
-RUN pip install --break-system-packages "https://github.com/KhiopsML/khiops-python/releases/download/${KHIOPS_PYTHON_VERSION}/khiops-${KHIOPS_PYTHON_VERSION}.tar.gz"
+RUN pip install --break-system-packages khiops[s3,gcs,azure]==${KHIOPS_PYTHON_VERSION}
 
 # Install python KNI binding
 # Make python3 the default python
-COPY --from=pykni /root/dist/kni*.whl /tmp/
-RUN pip install --no-cache-dir --break-system-packages /tmp/kni*.whl && \
+RUN pip install --no-cache-dir --break-system-packages khiops-kni && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 COPY fix-permissions.sh /usr/local/bin/
