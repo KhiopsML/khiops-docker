@@ -19,7 +19,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     tini \
-    libssl3 \
+    libssl3t64 \
     lsb-release \
     && \
     rm -rf /var/lib/apt/lists/*
@@ -57,18 +57,18 @@ RUN source /etc/os-release && \
     BUILDARCH=$(dpkg --print-architecture) && \
     apt-get update && \
     apt-get -y install --no-install-recommends ca-certificates wget openmpi-bin libopenmpi3t64 && \
-    TEMP_DEB="$(mktemp)" && \
+    TEMP_DEB="$(mktemp --suffix=.deb)" && \
     wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/${KHIOPS_CORE_PACKAGE_NAME}_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
-    apt-get install -y --no-install-recommends ./"$TEMP_DEB" && \
+    apt-get install -y --no-install-recommends "$TEMP_DEB" && \
     rm -f $TEMP_DEB && \
     wget "https://github.com/KhiopsML/khiopsdriver-gcs/releases/download/${GCS_DRIVER_VERSION}/khiops-driver-gcs_${GCS_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
-    apt-get install -y --no-install-recommends ./"$TEMP_DEB" && \
+    apt-get install -y --no-install-recommends "$TEMP_DEB" && \
     rm -f $TEMP_DEB && \
     wget "https://github.com/KhiopsML/khiopsdriver-s3/releases/download/${S3_DRIVER_VERSION}/khiops-driver-s3_${S3_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
-    apt-get install -y --no-install-recommends ./"$TEMP_DEB" && \
+    apt-get install -y --no-install-recommends "$TEMP_DEB" && \
     rm -f $TEMP_DEB && \
     wget "https://github.com/KhiopsML/khiopsdriver-azure/releases/download/${AZURE_DRIVER_VERSION}/khiops-driver-azure_${AZURE_DRIVER_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
-    apt-get install -y --no-install-recommends ./"$TEMP_DEB" && \
+    apt-get install -y --no-install-recommends "$TEMP_DEB" && \
     rm -f $TEMP_DEB && \
     rm -rf /var/lib/apt/lists/*
 USER ubuntu
@@ -157,12 +157,12 @@ RUN source /etc/os-release && \
     BUILDARCH=$(dpkg --print-architecture) && \
     apt-get update && \
     export KHIOPS_VERSION=$(apt-cache policy ${KHIOPS_CORE_PACKAGE_NAME} | grep Install | cut -d ' ' -f 4 | awk -F '-' '{printf $1; i = 2; while (i < NF) { printf "-"$i; ++i } }') && \
-    TEMP_DEB="$(mktemp)" && \
+    TEMP_DEB="$(mktemp --suffix=.deb)" && \
     wget "https://github.com/KhiopsML/khiops/releases/download/${KHIOPS_VERSION}/khiops_${KHIOPS_VERSION}-1-${CODENAME}.${BUILDARCH}.deb" -O "$TEMP_DEB" && \
-    apt-get install --no-install-recommends -y ./"$TEMP_DEB" && \
+    apt-get install --no-install-recommends -y "$TEMP_DEB" && \
     tag="v${KHIOPS_VISUALIZATION_VERSION//-/}" && \
     wget "https://github.com/KhiopsML/khiops-visualization-desktop/releases/download/${tag}/Khiops-Visualization-Desktop-${KHIOPS_VISUALIZATION_VERSION}_${BUILDARCH}.deb" -O "$TEMP_DEB" && \
-    apt-get install --no-install-recommends -y ./"$TEMP_DEB" && \
+    apt-get install --no-install-recommends -y "$TEMP_DEB" && \
     rm -f $TEMP_DEB && \
     apt-get purge --auto-remove -y 'fonts-dejavu*' && \
     apt-get install --no-install-recommends -y locales unzip fonts-noto fonts-noto-cjk fonts-noto-color-emoji && \
