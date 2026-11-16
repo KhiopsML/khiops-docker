@@ -7,7 +7,7 @@ ARG SERVER_IMAGE=ghcr.io/khiopsml/khiops-server:${SERVER_REVISION}
 ARG BASE_TAG=24.04
 # Khiops variables
 ARG KHIOPS_CORE_PACKAGE_NAME=khiops-core-openmpi
-ARG KHIOPS_VERSION=11.0.1
+ARG KHIOPS_VERSION=11.0.2
 
 # Base image
 # ------------------------------------------
@@ -195,7 +195,7 @@ USER root
 # Version of the Khiops Python library Pip package on the PyPI or Test PyPI repositories
 # this version can be either official, following this pattern : [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+
 # or pre-release (alpha, beta, release candidate), following this other pattern : [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+(rc|a|b)[0-9]+
-ARG KHIOPS_PYTHON_VERSION=11.0.1.1
+ARG KHIOPS_PYTHON_VERSION=11.0.2.0
 
 # hadolint ignore=DL3008,DL4006
 RUN apt-get --allow-unauthenticated update && \
